@@ -4,7 +4,6 @@
 _Authors: Robert Davison, Aaron Veronese, Jaehun Chung_
 
 ---
----
 
 ## Executive Summary
 
