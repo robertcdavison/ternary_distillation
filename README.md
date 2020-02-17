@@ -1,4 +1,4 @@
-<img src="https://www.chemengr.ucsb.edu/sites/chemengr.ucsb.edu/files/images/chemengr-logo-transparent.png" style="float: left; margin: 20px; height: 55px">
+<img src="https://www.chemengr.ucsb.edu/sites/chemengr.ucsb.edu/files/images/chemengr-logo-transparent.png" style="float: left; margin: 20px; height: 20px">
 
 # Distillation of a Ternary Mixture 
 _Authors: Robert Davison, Aaron Veronese, Jaehun Chung_
