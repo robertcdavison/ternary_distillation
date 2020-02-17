@@ -2,8 +2,12 @@
 
 clear;
 clc;
-%% Use polyfit to find a' b' and c' for all components
-global a1 a2 a3 b1 b2 b3 c1 c2 c3 %Use global variables so polyfit is used once
+
+%% 
+%Use polyfit to find a' b' and c' for all components
+global a1 a2 a3 b1 b2 b3 c1 c2 c3 
+%Use global variables so polyfit is used once
+
 T1 = [288.15 306.30 352.35];
 V1 = [107.47 109.841 116.63];
 p = polyfit(T1,V1,2);
@@ -16,30 +20,47 @@ T3 = [303.15 353.15 400];
 V3 = [107.415 113.717 120.879];
 p = polyfit(T3,V3,2);
 a3 = p(3); b3 = p(2); c3 = p(1);
-%% Given and measured compositions
+%%
+
+%% 
+% Write in given and measured compositions
+
 Xbottoms = [.05 0.46 0.49];
 ErrBottoms = [0.172719196 0.07875159 0.093967603];
 Ydistillate = [0.948263174  0.030486186 0.02125064];
 ErrDist = [0.003723788  0.002591978 0.00113181];
 Xtray = [0.128760483    0.500736977 0.370502539];
 ErrTray = [0.042341171  0.042996174 0.000655002];
-%% Finding all tray compositions and temperatures
+%%
+
+%% 
+% Find all tray compositions and temperatures
+
 X = zeros(22,3); %Create matrix for tray liquid compositions (1 is reboiler)
 Y = zeros(22,3); %Create matrix for tray vapor compositions (1 is reboiler)
 T = zeros(22,1); %Create vector for tray temperatures (1 is reboiler)
 X(1,:) = Xbottoms; %Add known bottoms composition
+
 T(1) = FindT(X(1,1),X(1,2),X(1,3)); %Find Temperature in reboiler
 Y(1,:) = findy(X(1,1),X(1,2),X(1,3),T(1)); %Find vapor composition leaving reboiler
+
+% Loop through all trays after reboiler and calculate temp and compositions
 X(2,:) = Y(1,:); %Liquid composition of tray 1 from mole balance
-for i = 2:21 %Loop through all trays after reboiler
+for i = 2:21 
     T(i) = FindT(X(i,1),X(i,2),X(i,3)); %Find temperature of tray i
     Y(i,:) = findy(X(i,1),X(i,2),X(i,3),T(i)); %Find vapor comp of tray i
     X(i+1,1) = X(i,1) + Y(i,1) - Y(i-1,1); %Mole balance to find liquid comp of tray i+1
     X(i+1,2) = X(i,2) + Y(i,2) - Y(i-1,2);
     X(i+1,3) = X(i,3) + Y(i,3) - Y(i-1,3);
 end
-T(22) = FindT(X(22,1),X(22,2),X(22,3));
-Y(22,:) = findy(X(22,1),X(22,2),X(22,3),T(22));
+
+T(22) = FindT(X(22,1),X(22,2),X(22,3)); % calculate temperature in distillate
+Y(22,:) = findy(X(22,1),X(22,2),X(22,3),T(22)); %calculate vapor comp in distillate
+%%
+
+%%
+% Calculate efficiencies
+
 CompEfficiency = (Ydistillate-Y(1,:))./(Y(21,:)-Y(1,:)); %Vapor Efficiencies of each component
 Efficiency = sum(CompEfficiency)/3; %Average vapor efficiency
 fprintf("Column Vapor Efficiency is %9.8f ",Efficiency);
@@ -49,6 +70,11 @@ for i = 2:22
     X_E(i,:) = X_E(i-1,:) + CompEfficiency.*(X(i,:)-X(i-1,:));
     Y_E(i,:) = Y_E(i-1,:) + CompEfficiency.*(Y(i,:)-Y(i-1,:));
 end
+%%
+
+%%
+% plot vapor mole fraction versus stage number
+
 Stages = 0:1:21;
 figure('DefaultAxesFontSize',12)
 plot(Stages,Y(:,1),'--b','LineWidth',2)
@@ -78,7 +104,11 @@ xlim([0 21.5])
 ylim([0 1])
 xlabel('Stage Number')
 ylabel('Vapor Mole Fraction (y_i)')
- 
+%%
+
+%%
+% Plot Liquid Mole fraction versus stage number 
+
 figure('DefaultAxesFontSize',12)
 plot(Stages,X(:,1),'--b','LineWidth',2)
 hold on
@@ -119,7 +149,11 @@ xlim([-.5 21])
 ylim([0 1])
 xlabel('Stage Number')
 ylabel('Liquid Mole Fraction (x_i)')
-%% Calculate Theoretical and Experimental Temperature Profiles
+%%
+
+%% 
+% Calculate and Plot Theoretical and Experimental Temperature Profiles
+
 T_E = T;
 for i = 1:length(T_E)
     T_E(i) = FindT(X_E(i,1),X_E(i,2),X_E(i,3));
@@ -138,7 +172,11 @@ xlim([0 21])
 xlabel('Stage Number')
 ylabel('Temperature (Celsius)')
 % legend({'Theoretical T Profile','Experimental T Profile'},'FontSize',12)
-%% Functions called for finding values needed above
+%%
+
+%% 
+% The functions defined below are called to find the values needed above
+
 function y = findy(x1,x2,x3,T) %Calculates vapor mole fraction
     X = [x1 x2 x3];
     y = zeros(1,3);

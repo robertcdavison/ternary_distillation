@@ -1,9 +1,13 @@
-%% DAY 2: CONTINUOUS DISTILLATION
+% DAY 2: CONTINUOUS DISTILLATION
 
 clear;
 clc;
-%% Use polyfit to find a' b' and c' for all components
-global a1 a2 a3 b1 b2 b3 c1 c2 c3 %Use global variables so polyfit is used once
+
+%%
+% Use polyfit to find a' b' and c' for all components
+global a1 a2 a3 b1 b2 b3 c1 c2 c3 
+% Use global variables so polyfit is used once
+
 T1 = [288.15 306.30 352.35];
 V1 = [107.47 109.841 116.63];
 p = polyfit(T1,V1,2);
@@ -16,7 +20,11 @@ T3 = [303.15 353.15 400];
 V3 = [107.415 113.717 120.879];
 p = polyfit(T3,V3,2);
 a3 = p(3); b3 = p(2); c3 = p(1);
-%% Given and measured compositions, flowrates and Temperatures
+%%
+
+%%
+% Write in the given and measured compositions, flowrates and Temperatures
+
 Ydistillate = [0.18933462 0.53525315 0.275412231];
 ErrDist = [0.137227109  0.06787682  0.205103929];
 Xfeed = [.1 .45 .45];
@@ -32,46 +40,78 @@ Tbottoms = 372.35;
 ErrTbottoms = 5.939696962;
 D = 2.4; %Distillate flow rate (mL/min)
 Feed = 5.4; %Feed Flow rate (mL/min)
-%% Finding Rectifying compositions and temperatures
-X = zeros(22,3); %Create matrix for tray liquid compositions (1 is distillate)
-Y = zeros(22,3); %Create matrix for tray vapor compositions (1 is distillate)
-T = zeros(22,1); %Create vector for tray temperatures (1 is distillate)
+%%
+
+%%
+% Find compositions and temperatures in the rectifying section
+
+X = zeros(22,3); %initiate matrix for tray liquid compositions (1 is distillate)
+Y = zeros(22,3); %initiate matrix for tray vapor compositions (1 is distillate)
+T = zeros(22,1); %initiate vector for tray temperatures (1 is distillate)
 i = 1;
+
 Y(i,:) = Ydistillate; %Add known distillate composition
 [X(i,:),T(i)] = findXT(Y(i,:)); %Find liquid composition and temp in distillate
 V = 6*D/findvL(Y(1,:),T(1)); %Molar flow rate of vapor (mol/min)
 L = 5/6*V; %Molar flow rate of liquid in rectifying section (mol/min)
 Y(i+1,:) = (Y(i,:)*V + X(i,:)*L - Y(i,:)*L)./V; %Vapor comp leaving tray below distillate
-for i = 2:10 %Loop through all trays in rectifying column
-    [X(i,:),T(i)] = findXT(Y(i,:)); %Find temperature and liquid comp of tray i
-    Y(i+1,:) = (Y(i,:)*V + X(i,:)*L - X(i-1,:)*L)./V;
+
+%Loop through all trays in rectifying column stepping from stage 2 to 10
+for i = 2:10 
+    [X(i,:),T(i)] = findXT(Y(i,:)); %calculate temperature at tray i
+    Y(i+1,:) = (Y(i,:)*V + X(i,:)*L - X(i-1,:)*L)./V; %calculate liquid comp at tray i
 end
-%% Find Feed Stage Composition and Temperatures
+%%
+
+%%
+% Find Feed Stage Composition and Temperatures
+
 i = 11;
-[X(i,:),T(i)] = findXT(Y(i,:));
+[X(i,:),T(i)] = findXT(Y(i,:)); %calculate temperature
 F = Feed/findvL(Xfeed,T(11));
 Lbar = L + F; %Molar flow rate of liquid in stripping section (mol/min)
 Vbar = V; %Vapor flow rate in stripping section (mol/min)
-Y(i+1,:) = (Y(i,:)*V + X(i,:)*Lbar - X(i-1,:)*L - Xfeed*F)./Vbar;
-%% Find Stripping Section Compositions and Temperatures
+Y(i+1,:) = (Y(i,:)*V + X(i,:)*Lbar - X(i-1,:)*L - Xfeed*F)./Vbar; %calculate composition
+%%
+
+%%
+% Find Stripping Section Compositions and Temperatures
+
+% Loop through all stripping trays from stage 12 to 21
 for i = 12:21
-    [X(i,:),T(i)] = findXT(Y(i,:));
+    [X(i,:),T(i)] = findXT(Y(i,:)); 
     Y(i+1,:) = (Y(i,:)*Vbar + X(i,:)*Lbar - X(i-1,:)*Lbar)./Vbar;
 end
-%% Find Bottoms Composition and Temperature
+%%
+
+%%
+% Find Bottoms Composition and Temperature
 i = 22;
 [X(i,:),T(i)] = findXT(Y(i,:));
-%% Calculate Liquid Murphree Efficiency
+%%
+
+%% 
+% Calculate Liquid Murphree Efficiency
+
 CompEfficiency = ((Xbottoms-X(1,:)))./((X(22,:)-X(1,:))); %Liquid Efficiencies of each component
 Efficiency = sum(CompEfficiency)/3; %Average liquid efficiency
 fprintf("Column Liquid Efficiency is %9.8f ",Efficiency);
-%% Calculate Experimental and Theoretical Composition Curves
+%%
+
+%% 
+%Calculate Experimental and Theoretical Composition Curves
+
 X_E = X; Y_E = Y;
 for i = 2:22
     X_E(i,:) = X_E(i-1,:) + CompEfficiency.*(X(i,:)-X(i-1,:));
     Y_E(i,:) = Y_E(i-1,:) + CompEfficiency.*(Y(i,:)-Y(i-1,:));
 end
 Stages = 21:-1:0;
+%%
+
+%%
+% Plot vapor mole fraction versus stage number
+
 figure('DefaultAxesFontSize',12)
 plot(Stages,Y(:,1),'--b','LineWidth',2)
 hold on
@@ -99,7 +139,11 @@ errorbar(21.1,Ydistillate(3),ErrDist(3),'k','LineWidth',2)
 xlim([0 21.5])
 xlabel('Stage Number')
 ylabel('Vapor Mole Fraction (y_i)')
+%%
  
+%%
+% Plot liquid mole fraction versus stage number
+
 figure('DefaultAxesFontSize',12)
 plot(Stages,X(:,1),'--b','LineWidth',2)
 hold on
@@ -139,7 +183,10 @@ errorbar(1,Xtray(3),ErrTray(3),'k','LineWidth',2)
 xlim([-.5 21])
 xlabel('Stage Number')
 ylabel('Liquid Mole Fraction (x_i)')
-%% Calculate Theoretical and Experimental Temperature Profiles
+%%
+
+%% 
+% Plot Theoretical and Experimental Temperature Profiles
 T_E = T;
 for i = 1:length(T_E)
     T_E(i) = FindT(X_E(i,1),X_E(i,2),X_E(i,3));
@@ -164,8 +211,13 @@ hold on
 xlim([-0.25 21.25])
 xlabel('Stage Number')
 ylabel('Temperature (Celsius)')
-%% Functions called for finding values needed above
-function [X,T] = findXT(Y)
+%%
+
+%%
+% The functions defined below are called on to find the values needed above
+
+%This Calculates composition using Raoult's law and antoine's eqn
+function [X,T] = findXT(Y) 
     P = 760;
     Tguess = 365;
     solver = @(X) [Y(2)*P - X(2)*findgamma(2,X(1),X(2),X(3),X(4))*antoine(2,X(4));...
